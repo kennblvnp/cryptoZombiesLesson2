@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="js/web3v0.20.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+		  <div class="col-sm-4"></div>
+		  <div class="col-sm-4">
+			<br><br>
+			<label for="exampleInputEmail1">Your zombie</label>
+			<input type="text" class="form-control" id="zombie-name" aria-describedby="emailHelp" placeholder="Enter zombie name">
+			<br>
+      <button type="button" id="create-zombie" class="btn btn-primary">Create Zombie</button>
+			<button type="button" id="eatKitty" class="btn btn-warning">Eat a kitty</button>
+			<br>
+			<br>
+			<div id="display" style="word-wrap: break-word;"></div>
+		  </div>
+		  <div class="col-sm-4"></div>
+		</div>
+	</div>
+<script>
+$(document).ready(function() {
+	function authorize(){
+		if (typeof window.web3 !== 'undefined') {
+		  var web3 = new Web3(window.web3.currentProvider);
+		} else {
+		  // web3 = new Web3(new Web3.providers.HttpProvider("http://192.168.1.6:1201"));
+		  web3 = new Web3(new Web3.providers.HttpProvider("HTTP://127.0.0.1:7545"));
+		}
+
+		web3.eth.defaultAccount = web3.eth.accounts[0]
+		web3.personal.unlockAccount(web3.eth.defaultAccount)
+
+		return web3;
+	}
+
+  $.getJSON("http://contracts.local:8888/cryptoZombiesLesson2/build/contracts/ZombieFactory.json", function( data ) {
+    console.log(data);
+  });
+
+	function deployZombieFactoryContract(web3){
+		var abi = [
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "zombies",
+        "outputs": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "dna",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "zombieToOwner",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "name": "zombieId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "name": "dna",
+            "type": "uint256"
+          }
+        ],
+        "name": "NewZombie",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "name": "createRandomZombie",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+		var ZombieFactoryContract = web3.eth.contract(abi)
+		var contractAddress = "0x90bd80cb6d4f0140971b644b1ea7b564b2b850cf"
+		var ZombieFactory = ZombieFactoryContract.at(contractAddress)
+
+		return ZombieFactory;
+	}
+
+	function deployZombieFeedingContract(web3){
+		var abi = [
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "zombies",
+        "outputs": [
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "dna",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "name": "zombieToOwner",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_name",
+            "type": "string"
+          }
+        ],
+        "name": "createRandomZombie",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "name": "zombieId",
+            "type": "uint256"
+          },
+          {
+            "indexed": false,
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "indexed": false,
+            "name": "dna",
+            "type": "uint256"
+          }
+        ],
+        "name": "NewZombie",
+        "type": "event"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_zombieId",
+            "type": "uint256"
+          },
+          {
+            "name": "_targetDna",
+            "type": "uint256"
+          },
+          {
+            "name": "_species",
+            "type": "string"
+          }
+        ],
+        "name": "feedAndMultiply",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_zombieId",
+            "type": "uint256"
+          },
+          {
+            "name": "_kittyId",
+            "type": "uint256"
+          }
+        ],
+        "name": "feedOnKitty",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ];
+		var ZombieFeedingContract = web3.eth.contract(abi)
+		var contractAddress = "0x3bd43a4500cf93e100eb7158ec8d7b1b2b11c8e1"
+		var ZombieFeeding = ZombieFeedingContract.at(contractAddress)
+
+		return ZombieFeeding;
+	}
+
+	var web3 = authorize();
+  var ZombieFactory = deployZombieFactoryContract(web3);
+	var ZombieFeeding = deployZombieFeedingContract(web3);
+
+
+  $("#eatKitty").click(function(e) {
+    let zombieId = 1;
+    let kittyId = 1;
+
+    ZombieFeeding.feedOnKitty(zombieId, kittyId)
+  })
+
+	$("#create-zombie").click(function(e) {
+	  var name = $("#zombie-name").val()
+	  ZombieFactory.createRandomZombie(name)
+	})
+
+	var event = ZombieFactory.NewZombie(function(error, result) {
+	  if (error) return
+		var aw = generateZombie(result.args.zombieId.c[0], result.args.name, result.args.dna.c[1])
+		console.log("new zombie created");
+		console.log(aw);
+		var myJSON = JSON.stringify(aw);
+		$("#display").html(myJSON)
+	})
+
+	function generateZombie(id, name, dna) {
+	  let dnaStr = String(dna)
+	  while (dnaStr.length < 16)
+	    dnaStr = "0" + dnaStr
+
+	  let zombieDetails = {
+	    headChoice: dnaStr.substring(0, 2) % 7 + 1,
+	    eyeChoice: dnaStr.substring(2, 4) % 11 + 1,
+	    shirtChoice: dnaStr.substring(4, 6) % 6 + 1,
+	    skinColorChoice: parseInt(dnaStr.substring(6, 8) / 100 * 360),
+	    eyeColorChoice: parseInt(dnaStr.substring(8, 10) / 100 * 360),
+	    clothesColorChoice: parseInt(dnaStr.substring(10, 12) / 100 * 360),
+	    zombieName: name,
+	    zombieDescription: "A Level 1 CryptoZombie",
+	  }
+	  return zombieDetails
+	}
+});
+</script>
+</body>
+</html>
