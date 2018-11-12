@@ -43,11 +43,40 @@ class Home extends Component {
     return instance;
   }
 
+  generateZombie(id, name, dna) {
+    let dnaStr = String(dna)
+    while (dnaStr.length < 16)
+      dnaStr = "0" + dnaStr
+
+    let zombieDetails = {
+      headChoice: dnaStr.substring(0, 2) % 7 + 1,
+      eyeChoice: dnaStr.substring(2, 4) % 11 + 1,
+      shirtChoice: dnaStr.substring(4, 6) % 6 + 1,
+      skinColorChoice: parseInt(dnaStr.substring(6, 8) / 100 * 360),
+      eyeColorChoice: parseInt(dnaStr.substring(8, 10) / 100 * 360),
+      clothesColorChoice: parseInt(dnaStr.substring(10, 12) / 100 * 360),
+      zombieName: name,
+      zombieDescription: "A Level 1 CryptoZombie",
+    }
+    return zombieDetails
+  }
+
   componentWillMount(){
+
     this.authorizeMetaMask()
     console.log(this.web3)
-    this.zFactoryInstance = this.deploy(ZombieFactoryJSON.abi, "0x6c6d8677803aa9ce5fef3e900edadbde42a7d18a")
-    this.zFeedingInstance = this.deploy(ZombieFeedingJSON.abi, "0xf8c971c656bb45c026270f0381dc63310c7d1172")
+    this.zFactoryInstance = this.deploy(ZombieFactoryJSON.abi, "0xb249baaacdb5f3a9370eaffedc50e4a32c627d95")
+    this.zFeedingInstance = this.deploy(ZombieFeedingJSON.abi, "0x37c11a3b28342e8cfa94d4a5291e5ffd02c76c3c")
+
+    // Events listener
+    this.zFactoryInstance.NewZombie(function(error, result) {
+      if (error) return
+      var aw = this.generateZombie(result.args.zombieId.c[0], result.args.name, result.args.dna.c[1])
+      console.log("new zombie created")
+      console.log(aw)
+      var myJSON = JSON.stringify(aw)
+      console.log(myJSON)
+    })
   }
 
   componentDidMount(){
@@ -56,7 +85,7 @@ class Home extends Component {
   handleSubmit(e) {
     e.preventDefault();
     const data = new FormData(e.target);
-    
+
     this.zFactoryInstance.createRandomZombie(data.get("zombieName"))
   }
 
@@ -71,7 +100,7 @@ class Home extends Component {
             </div>
             <div className="col-sm-4">
                 <label>Your zombie</label><br/>
-                
+
 
                 <form onSubmit={this.handleSubmit}>
                   <input type="text" id="zombieName" name="zombieName" className="form-control" placeholder="Enter zombie name" /> <br/>
@@ -79,9 +108,9 @@ class Home extends Component {
                 </form>
 
                 <br/>
-                
+
                 <button type="button" id="eatKitty" className="btn btn-warning">Eat a kitty</button><br/>
-                
+
                 <div id="display"></div>
             </div>
             <div className="col-sm-4"></div>
