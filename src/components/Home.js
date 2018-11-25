@@ -10,13 +10,14 @@ class Home extends Component {
     this.state = {
       web3: '',
       zFactoryInstance: '',
-      zFeedingInstance: ''
+      zFeedingInstance: '',
+      defaultAccount: ''
     }
 
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  authorizeMetaMask() {
+  async authorizeMetaMask() {
     if (typeof window.web3 !== 'undefined') {
       var web3 = new Web3(window.web3.currentProvider);
     } else {
@@ -25,13 +26,14 @@ class Home extends Component {
     }
 
     web3 = new Web3(new Web3.providers.HttpProvider("HTTP://127.0.0.1:7545"));
-    // console.log(web3)
+    console.log(web3)
 
-    web3.eth.defaultAccount = web3.eth.accounts[0]
-    web3.personal.unlockAccount(web3.eth.defaultAccount)
+    this.defaultAccount = await web3.eth.getAccounts().then(function(e){
+      return e[0]
+    })
+    web3.eth.personal.unlockAccount(this.defaultAccount)
 
-    this.current_login = web3.eth.defaultAccount
-    this.web3js_version = web3.version.api
+    this.current_login  = this.defaultAccount
 
     this.web3 = web3;
   }
@@ -64,19 +66,20 @@ class Home extends Component {
   componentWillMount(){
 
     this.authorizeMetaMask()
+    // this.web3js_version = this.web3.version
     console.log(this.web3)
-    this.zFactoryInstance = this.deploy(ZombieFactoryJSON.abi, "0xb249baaacdb5f3a9370eaffedc50e4a32c627d95")
-    this.zFeedingInstance = this.deploy(ZombieFeedingJSON.abi, "0x37c11a3b28342e8cfa94d4a5291e5ffd02c76c3c")
-
-    // Events listener
-    this.zFactoryInstance.NewZombie(function(error, result) {
-      if (error) return
-      var aw = this.generateZombie(result.args.zombieId.c[0], result.args.name, result.args.dna.c[1])
-      console.log("new zombie created")
-      console.log(aw)
-      var myJSON = JSON.stringify(aw)
-      console.log(myJSON)
-    })
+    // this.zFactoryInstance = this.deploy(ZombieFactoryJSON.abi, "0x6c6d8677803aa9ce5fef3e900edadbde42a7d18a")
+    // this.zFeedingInstance = this.deploy(ZombieFeedingJSON.abi, "0xf8c971c656bb45c026270f0381dc63310c7d1172")
+    //
+    // // Events listener
+    // this.zFactoryInstance.NewZombie(function(error, result) {
+    //   if (error) return
+    //   var aw = this.generateZombie(result.args.zombieId.c[0], result.args.name, result.args.dna.c[1])
+    //   console.log("new zombie created")
+    //   console.log(aw)
+    //   var myJSON = JSON.stringify(aw)
+    //   console.log(myJSON)
+    // })
   }
 
   componentDidMount(){
@@ -85,8 +88,17 @@ class Home extends Component {
   handleSubmit(e) {
     e.preventDefault();
     const data = new FormData(e.target);
-
-    this.zFactoryInstance.createRandomZombie(data.get("zombieName"))
+    this.zFactoryInstance.createRandomZombie(data.get("zombieName")).send({ from: this.web3.eth.defaultAccount, gas: "6000000000" })
+      .on("receipt", function(receipt) {
+        // $("#txStatus").text("Successfully created " + name + "!");
+        // Transaction was accepted into the blockchain, let's redraw the UI
+        console.log(receipt);
+        // getZombiesByOwner(userAccount).then(displayZombies);
+      })
+      .on("error", function(error) {
+        // Do something to alert the user their transaction has failed
+        console.log(error);
+      });
   }
 
   render (){

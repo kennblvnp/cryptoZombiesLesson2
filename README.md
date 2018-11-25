@@ -12,6 +12,6 @@ Add your new address at `src/components/Home.js`
 `this.zFeedingInstance = this.deploy(ZombieFeedingJSON.abi, "0xf8c971c656bb45c026270f0381dc63310c7d1172")`  
 
 Using Reactjs now  
-λ `npm install web3@v0.20.6`   
+λ `npm install web3@v0.20.6` or `v1.0.0-beta.34`  
 λ `npm install`  
 λ `npm start`  
