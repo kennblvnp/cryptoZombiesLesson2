@@ -1,5 +1,4 @@
 import React , { Component } from 'react';
-import Web3  from 'web3';
 
 class Home extends Component {
   componentWillMount(){
